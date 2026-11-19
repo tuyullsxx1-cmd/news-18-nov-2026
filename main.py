@@ -24,17 +24,50 @@ C_AM = (26, 128, 84)        # green
 C_SCI = (104, 62, 168)      # purple
 C_ECO = (176, 124, 0)       # ochre
 
+# Font cache: ImageFont.truetype re-reads the TTF file on every call, and this
+# script draws text dozens of times. Cache one Font object per (name, size)
+# so the render is identical but no longer re-loads the font files.
+_FONT_CACHE = {}
+
 def font(name, size):
-    p = {"bold": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-         "reg": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-         "mono": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-         "serif_b": "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"}[name]
-    return ImageFont.truetype(p, size)
+    key = (name, size)
+    if key not in _FONT_CACHE:
+        p = {"bold": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+             "reg": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+             "mono": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+             "serif_b": "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"}[name]
+        _FONT_CACHE[key] = ImageFont.truetype(p, size)
+    return _FONT_CACHE[key]
 
 def wrap(d, text, f, max_w):
     words = text.split()
     lines, cur = [], ""
+    def split_long(word):
+        # Hard-break a single word that is wider than max_w on its own;
+        # without this it would be placed on its own line and overflow
+        # its card/column unchecked (e.g. a long token or URL-like word).
+        parts, piece = [], ""
+        for ch in word:
+            if d.textlength(piece + ch, font=f) <= max_w:
+                piece += ch
+            else:
+                if piece:
+                    parts.append(piece)
+                piece = ch
+        if piece:
+            parts.append(piece)
+        return parts
+
     for w in words:
+        if d.textlength(w, font=f) > max_w:
+            if cur:
+                lines.append(cur)
+                cur = ""
+            parts = split_long(w)
+            lines.extend(parts[:-1])
+            cur = parts[-1]
+            continue
+
         t = (cur + " " + w).strip()
         if d.textlength(t, font=f) <= max_w:
             cur = t
