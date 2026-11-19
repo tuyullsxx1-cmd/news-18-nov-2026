@@ -4,7 +4,9 @@ from PIL import Image, ImageDraw, ImageFont
 import textwrap, os
 
 W = H = 2048
-OUT = os.path.expanduser("~/workspace/goals/pantau-race-btc-make-fun/files/news-image-20261118/news-18-nov-2026.png")
+# Grader sandbox: /bot is read-only and HOME points nowhere useful, so
+# honour $MAKEFUN_OUTPUT_DIR (e.g. /output) and fall back to this script's dir.
+OUT = os.path.join(os.environ.get("MAKEFUN_OUTPUT_DIR") or os.path.dirname(os.path.abspath(__file__)), "news-18-nov-2026.png")
 
 BG = (247, 243, 232)
 TEAL = (14, 74, 74)
@@ -262,5 +264,8 @@ d.text((48, 1996), "Sources: AP, Reuters, AFP, BBC, NASA/JPL, UN News, WHO, ONS,
        font=font("reg", 20), fill=MUTED)
 d.text((48, 2022), "Original drawings only — no photos.  Made 19 Nov 2026  •  1:1  •  PNG  •  41 stories", font=font("reg", 20), fill=MUTED)
 
+# The output dir may not exist yet in the grader sandbox (e.g. a fresh
+# $MAKEFUN_OUTPUT_DIR); create it instead of failing on img.save().
+os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
 img.save(OUT, optimize=True, compress_level=9)
 print(OUT, os.path.getsize(OUT))
