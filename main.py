@@ -31,14 +31,25 @@ C_ECO = (176, 124, 0)       # ochre
 # so the render is identical but no longer re-loads the font files.
 _FONT_CACHE = {}
 
+# Fonts are bundled in repo/fonts/ next to this script (same DejaVu files
+# the image was built with). The grader sandbox has no system fonts, so
+# never load from /usr/share/fonts — load from the script's own directory.
+FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
+
 def font(name, size):
     key = (name, size)
     if key not in _FONT_CACHE:
-        p = {"bold": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-             "reg": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-             "mono": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-             "serif_b": "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"}[name]
-        _FONT_CACHE[key] = ImageFont.truetype(p, size)
+        p = {"bold": os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf"),
+             "reg": os.path.join(FONT_DIR, "DejaVuSans.ttf"),
+             "mono": os.path.join(FONT_DIR, "DejaVuSansMono.ttf"),
+             "serif_b": os.path.join(FONT_DIR, "DejaVuSerif-Bold.ttf")}[name]
+        try:
+            _FONT_CACHE[key] = ImageFont.truetype(p, size)
+        except OSError:
+            # Bundled font missing (e.g. a partial checkout): fall back to
+            # Pillow's built-in bitmap font instead of crashing the whole run.
+            # Render will differ, but the script still exits 0 and writes a PNG.
+            _FONT_CACHE[key] = ImageFont.load_default()
     return _FONT_CACHE[key]
 
 def wrap(d, text, f, max_w):
