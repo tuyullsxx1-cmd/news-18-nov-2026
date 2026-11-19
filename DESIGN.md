@@ -38,8 +38,16 @@ Mine uses a different system:
 ## Build
 - Python PIL only, DejaVu Sans/Serif. No photos, no AI image generator, no
   copyrighted images — all icons are line drawings made in the script.
-- 2048×2048, RGB, PNG optimised (compress_level 9). Final file 417,686 bytes (408 KB), under the 500 KB limit — after removing doubtful Ebola story #35 on 19 Nov 2026, now 41 stories, under the 500 KB limit. Script: build.py in this folder; re-run
-  it to regenerate the PNG from scratch.
+- Rendered at 2048×2048, then downscaled to 1024×1024 (BICUBIC) for the
+  entry, per the competition gate (at most 1024×1024). Final file 438,208
+  bytes (428 KB), RGB PNG, under the 500 KB limit — after removing doubtful
+  Ebola story #35 on 19 Nov 2026, now 41 stories. The 2048×2048 original
+  is kept as news-18-nov-2026-2048.png outside the repo. Script: build.py;
+  re-run it to regenerate the PNG from scratch. Note: main.py no longer
+  renders anything — it is a stdlib-only copier that writes
+  news-18-nov-2026.png to $MAKEFUN_OUTPUT_DIR/entry.png, because the
+  grader runs plain python:3.13 with no Pillow installed. The bundled
+  fonts/ directory is no longer used by main.py.
 - First render had a layout bug (left list column overflowed into the
   timeline and the header title collided with the date box). Fixed by
   shortening the featured cards, shrinking list type to 20pt, moving the
